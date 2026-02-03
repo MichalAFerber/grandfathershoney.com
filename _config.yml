@@ -1,0 +1,43 @@
+# Site settings
+title: Grandfather's Honey
+description: Small-scale beekeeping & honey production in rural South Carolina honoring Lorenzo Lorraine Langstroth.
+url: "https://grandfathershoney.com"
+baseurl: ""
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+permalink: pretty
+
+# Exclude from processing
+exclude:
+  - OLD_WEBSITE
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+
+# Collections
+collections:
+  books:
+    output: false
+
+# Default front matter
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: "default"
+
+# Plugins for GitHub Pages
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+# Social links
+social:
+  name: Grandfather's Honey
+
+# Contact form (Tally.so)
+tally_form_id: mR4894
