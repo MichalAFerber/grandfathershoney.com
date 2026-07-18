@@ -17,6 +17,7 @@ exclude:
   - Gemfile.lock
   - node_modules
   - vendor
+  - worker
 
 # Collections
 collections:
@@ -39,5 +40,11 @@ plugins:
 social:
   name: Grandfather's Honey
 
-# Contact form (Tally.so)
-tally_form_id: mR4894
+# Contact form (first-party; posts to the Cloudflare Worker in /worker,
+# which relays via Forward Email SMTP)
+contact:
+  endpoint: https://api.grandfathershoney.com/contact
+  email: michal@grandfathershoney.com
+  # Cloudflare Turnstile sitekey. The default below is Cloudflare's public
+  # "always passes" test key — swap in the site's real key at go-live.
+  turnstile_sitekey: "1x00000000000000000000AA"

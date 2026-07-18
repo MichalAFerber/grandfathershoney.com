@@ -144,4 +144,64 @@ document.addEventListener('DOMContentLoaded', function() {
       openLightbox(index);
     });
   });
+
+  // Contact form
+  const contactForm = document.getElementById('contact-form');
+  if (contactForm) {
+    const statusEl = document.getElementById('cf-status');
+    const submitBtn = document.getElementById('cf-submit');
+
+    function setStatus(message, type) {
+      statusEl.textContent = message;
+      statusEl.className = 'form-status' + (type ? ' is-' + type : '');
+    }
+
+    contactForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      setStatus('', null);
+
+      if (!contactForm.checkValidity()) {
+        contactForm.reportValidity();
+        return;
+      }
+
+      const tokenEl = contactForm.querySelector('[name="cf-turnstile-response"]');
+      const token = tokenEl ? tokenEl.value : '';
+      if (!token) {
+        setStatus('Please complete the challenge and try again.', 'error');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      setStatus('Sending…', null);
+
+      fetch(contactForm.action, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: contactForm.name.value.trim(),
+          email: contactForm.email.value.trim(),
+          subject: contactForm.subject.value.trim(),
+          message: contactForm.message.value.trim(),
+          token: token
+        })
+      }).then(function(r) {
+        return r.json().catch(function() { return { ok: r.ok }; });
+      }).then(function(data) {
+        if (data && data.ok) {
+          contactForm.reset();
+          setStatus('Thank you! Your message has been sent.', 'success');
+        } else {
+          setStatus((data && data.error) || 'Something went wrong. Please try again.', 'error');
+        }
+      }).catch(function() {
+        setStatus('Could not reach the server. Please try again later.', 'error');
+      }).finally(function() {
+        submitBtn.disabled = false;
+        if (window.turnstile) {
+          window.turnstile.reset();
+        }
+      });
+    });
+  }
 });
