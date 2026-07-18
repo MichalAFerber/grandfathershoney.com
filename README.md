@@ -6,6 +6,8 @@ A Jekyll-powered website celebrating small-scale beekeeping & honey production i
 
 This website showcases the legacy of L. L. Langstroth and promotes traditional beekeeping practices. The site features photo galleries, educational resources, and information about sustainable honey production.
 
+> **Dev-standards note:** client website — keeps its own branding, fonts, copyright, and GitHub Pages hosting; the contact form (Turnstile + Forward Email SMTP) and footer credit follow the TGWAB Dev Standards.
+
 ## 🛠️ Tech Stack
 
 - **Jekyll** - Static site generator
@@ -21,6 +23,7 @@ This website showcases the legacy of L. L. Langstroth and promotes traditional b
 - **SEO Optimized** - Meta tags, Open Graph, and sitemap.xml
 - **Custom 404 Page** - Branded error page with helpful navigation
 - **Resource Library** - Curated books, videos, and websites about beekeeping
+- **First-Party Contact Form** - Cloudflare Turnstile protected, relayed via a Cloudflare Worker over Forward Email SMTP (no third-party form service)
 
 ## 📁 Project Structure
 
@@ -35,6 +38,7 @@ This website showcases the legacy of L. L. Langstroth and promotes traditional b
 │   ├── js/
 │   │   └── main.js      # Interactive features
 │   └── images/          # Image assets
+├── worker/              # Cloudflare Worker: contact-form → Forward Email SMTP
 ├── 404.html             # Custom error page
 └── index.html           # Homepage
 ```
@@ -75,6 +79,14 @@ Edit the YAML files in `_data/`:
 - `books.yml` - Beekeeping books
 - `videos.yml` - Educational videos
 - `websites.yml` - Useful websites
+
+### Contact Form
+
+The contact form posts JSON to the Cloudflare Worker in [`worker/`](worker/)
+(`https://api.grandfathershoney.com/contact`), which verifies Turnstile
+server-side and relays the message via Forward Email SMTP. Site-side settings
+live in `_config.yml` under `contact:` (endpoint, fallback email, Turnstile
+sitekey). Deploy and secrets: see [`worker/README.md`](worker/README.md).
 
 ### Modifying Styles
 

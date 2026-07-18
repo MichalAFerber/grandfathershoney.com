@@ -176,14 +176,28 @@ title:
 <section id="contact" class="contact-section">
   <div class="container">
     <h2 class="section-title">Contact Us</h2>
-    <div class="contact-form">
-      <iframe
-        src="https://tally.so/embed/{{ site.tally_form_id }}?hideTitle=1&dynamicHeight=1"
-        title="Contact Us"
-        width="100%"
-        frameborder="0"
-        loading="lazy">
-      </iframe>
-    </div>
+    <form id="contact-form" class="contact-form" method="post" action="{{ site.contact.endpoint }}" novalidate>
+      <div class="field">
+        <label for="cf-name">Name</label>
+        <input id="cf-name" name="name" type="text" autocomplete="name" maxlength="120" required>
+      </div>
+      <div class="field">
+        <label for="cf-email">Email</label>
+        <input id="cf-email" name="email" type="email" autocomplete="email" maxlength="254" required>
+      </div>
+      <div class="field">
+        <label for="cf-subject">Subject</label>
+        <input id="cf-subject" name="subject" type="text" maxlength="160" required>
+      </div>
+      <div class="field">
+        <label for="cf-message">Message</label>
+        <textarea id="cf-message" name="message" rows="6" maxlength="5000" required></textarea>
+      </div>
+      <div class="cf-turnstile" data-sitekey="{{ site.contact.turnstile_sitekey }}" data-theme="auto"></div>
+      <button type="submit" class="btn btn-primary" id="cf-submit">Send message</button>
+      <p class="form-status" id="cf-status" role="status" aria-live="polite"></p>
+      <noscript><p class="form-status">This form needs JavaScript. You can email us at <a href="mailto:{{ site.contact.email }}">{{ site.contact.email }}</a>.</p></noscript>
+    </form>
   </div>
 </section>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>

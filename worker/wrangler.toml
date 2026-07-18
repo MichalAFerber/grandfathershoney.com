@@ -1,0 +1,24 @@
+# Contact-form relay for grandfathershoney.com.
+# Deploy from this directory with: npx wrangler deploy
+# (log in to the Cloudflare account that owns the grandfathershoney.com zone)
+name = "grandfathershoney-contact"
+main = "src/index.js"
+compatibility_date = "2026-07-01"
+
+# Workers custom domain — Cloudflare creates and owns the DNS record on deploy.
+routes = [
+  { pattern = "api.grandfathershoney.com", custom_domain = true }
+]
+
+[vars]
+SITE_NAME = "Grandfather's Honey"
+SMTP_HOST = "smtp.forwardemail.net"
+SMTP_PORT = "465"
+SMTP_USER = "noreply@grandfathershoney.com"
+MAIL_FROM = "noreply@grandfathershoney.com"
+MAIL_TO = "michal@grandfathershoney.com"
+ALLOWED_ORIGINS = "https://grandfathershoney.com,https://www.grandfathershoney.com"
+
+# Secrets — set from Proton Pass, never committed (DEVSTANDARDS §6/§16):
+#   npx wrangler secret put SMTP_PASS          # Forward Email SMTP password
+#   npx wrangler secret put TURNSTILE_SECRET   # Turnstile secret key
