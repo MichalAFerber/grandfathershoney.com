@@ -183,12 +183,12 @@ document.addEventListener('DOMContentLoaded', function() {
           email: contactForm.email.value.trim(),
           subject: contactForm.subject.value.trim(),
           message: contactForm.message.value.trim(),
-          token: token
+          turnstileToken: token
         })
       }).then(function(r) {
-        return r.json().catch(function() { return { ok: r.ok }; });
+        return r.json().catch(function() { return { sent: r.ok }; });
       }).then(function(data) {
-        if (data && data.ok) {
+        if (data && data.sent) {
           contactForm.reset();
           setStatus('Thank you! Your message has been sent.', 'success');
         } else {
