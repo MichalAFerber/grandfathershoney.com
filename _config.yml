@@ -45,6 +45,7 @@ social:
 contact:
   endpoint: https://api.grandfathershoney.com/contact
   email: michal@grandfathershoney.com
-  # Cloudflare Turnstile sitekey. The default below is Cloudflare's public
-  # "always passes" test key — swap in the site's real key at go-live.
-  turnstile_sitekey: "1x00000000000000000000AA"
+  # Cloudflare Turnstile sitekey (public by design). Widget "Clients" in the
+  # TechGuyWithABeard account; its secret lives in Proton Pass as
+  # cloudflare/turnstile-clients.
+  turnstile_sitekey: "0x4AAAAAAD-B7hIU5QqSXReP"

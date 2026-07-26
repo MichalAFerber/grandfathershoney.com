@@ -3,18 +3,23 @@
  *
  * POST /contact {name, email, subject, message, token}
  *   → verifies Cloudflare Turnstile server-side
- *   → relays the message through Forward Email SMTP (implicit TLS)
+ *   → relays the message through the Forward Email REST API
  * GET /health → {"status":"up"}
  *
- * Vars (wrangler.toml): SITE_NAME, SMTP_HOST, SMTP_PORT, SMTP_USER,
- * MAIL_FROM, MAIL_TO, ALLOWED_ORIGINS
- * Secrets (wrangler secret put): SMTP_PASS, TURNSTILE_SECRET
+ * Vars (wrangler.toml): SITE_NAME, FE_API_USER, MAIL_FROM, MAIL_TO,
+ * ALLOWED_ORIGINS
+ * Secrets (wrangler secret put): FE_API_PASS, TURNSTILE_SECRET
+ *
+ * FE_API_USER / FE_API_PASS are the *alias* credentials for
+ * noreply@grandfathershoney.com, not the account-wide API token. Forward Email
+ * accepts either on this endpoint; the alias pair is scoped to the one mailbox,
+ * so a leak here cannot send as any other domain in the account.
  */
-import { connect } from 'cloudflare:sockets';
+const FE_API = 'https://api.forwardemail.net/v1/emails';
+const FE_TIMEOUT_MS = 30000;
 
 const LIMITS = { name: 120, email: 254, subject: 160, message: 5000 };
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const SMTP_TIMEOUT_MS = 30000;
 
 export default {
   async fetch(request, env) {
@@ -44,7 +49,7 @@ export default {
     if (origin && !allowedOrigins(env).includes(origin)) {
       return json({ ok: false, error: 'Origin not allowed.' }, 403, cors);
     }
-    if (!env.SMTP_USER || !env.SMTP_PASS || !env.TURNSTILE_SECRET) {
+    if (!env.FE_API_USER || !env.FE_API_PASS || !env.TURNSTILE_SECRET) {
       return json({ ok: false, error: 'Contact form is not configured yet.' }, 503, cors);
     }
 
@@ -71,7 +76,7 @@ export default {
     try {
       await sendMail(env, fields);
     } catch (e) {
-      console.log('SMTP send failed:', e && e.message);
+      console.log('Forward Email send failed:', e && e.message);
       return json({ ok: false, error: 'Could not send your message right now. Please try again later.' }, 502, cors);
     }
     return json({ ok: true }, 200, cors);
@@ -139,117 +144,36 @@ async function sendMail(env, f) {
     '\nEmail:\t' + escapeHtml(f.email) +
     '\n\n' + escapeHtml(f.message) + '</div>';
 
-  const message = [
-    'From: ' + displayName(siteName) + ' <' + from + '>',
-    'To: <' + to + '>',
-    'Reply-To: <' + f.email + '>',
-    'Subject: ' + encodeHeaderWord(subject),
-    'Date: ' + new Date().toUTCString().replace(/GMT$/, '+0000'),
-    'Message-ID: <' + crypto.randomUUID() + '@' + from.split('@')[1] + '>',
-    'MIME-Version: 1.0',
-    'Content-Type: text/html; charset=utf-8',
-    'Content-Transfer-Encoding: base64',
-    '',
-    wrap76(b64Utf8(html))
-  ].join('\r\n');
-
-  await smtpSend(env, from, to, message);
-}
-
-async function smtpSend(env, from, to, message) {
-  const socket = connect(
-    { hostname: env.SMTP_HOST || 'smtp.forwardemail.net', port: Number(env.SMTP_PORT || 465) },
-    { secureTransport: 'on', allowHalfOpen: false }
-  );
-  const writer = socket.writable.getWriter();
-  const reader = socket.readable.getReader();
-  const enc = new TextEncoder();
-  const dec = new TextDecoder();
-  let buffer = '';
-  let timer;
-  const timeout = new Promise((resolve, reject) => {
-    timer = setTimeout(() => reject(new Error('SMTP timeout')), SMTP_TIMEOUT_MS);
+  // Forward Email builds the MIME itself (Nodemailer-style options), so the
+  // worker no longer hand-rolls headers, RFC 2047 encoding or dot-stuffing.
+  await feSend(env, {
+    from: displayName(siteName) + ' <' + from + '>',
+    to,
+    replyTo: f.email,
+    subject,
+    html
   });
+}
 
-  const send = (cmd) => writer.write(enc.encode(cmd + '\r\n'));
-
-  async function expect(codes) {
-    for (;;) {
-      if (buffer.endsWith('\r\n')) {
-        const lines = buffer.slice(0, -2).split('\r\n');
-        const last = lines[lines.length - 1];
-        if (/^\d{3}( |$)/.test(last)) {
-          const reply = buffer;
-          buffer = '';
-          const code = Number(last.slice(0, 3));
-          if (!codes.includes(code)) {
-            throw new Error('SMTP ' + code + ': ' + reply.trim().slice(0, 200));
-          }
-          return code;
-        }
-      }
-      const { value, done } = await reader.read();
-      if (done) throw new Error('SMTP connection closed unexpectedly');
-      buffer += dec.decode(value, { stream: true });
-    }
-  }
-
-  const conversation = (async () => {
-    await expect([220]);
-    await send('EHLO ' + from.split('@')[1]);
-    await expect([250]);
-    await send('AUTH LOGIN');
-    await expect([334]);
-    await send(b64Utf8(env.SMTP_USER));
-    await expect([334]);
-    await send(b64Utf8(env.SMTP_PASS));
-    await expect([235]);
-    await send('MAIL FROM:<' + from + '>');
-    await expect([250]);
-    await send('RCPT TO:<' + to + '>');
-    await expect([250, 251]);
-    await send('DATA');
-    await expect([354]);
-    const stuffed = ('\r\n' + message).replace(/\r\n\./g, '\r\n..').slice(2);
-    await writer.write(enc.encode(stuffed + '\r\n.\r\n'));
-    await expect([250]);
-    await send('QUIT');
-  })();
-
-  try {
-    await Promise.race([conversation, timeout]);
-  } finally {
-    clearTimeout(timer);
-    try { await socket.close(); } catch (e) { /* already closed */ }
+async function feSend(env, message) {
+  const auth = 'Basic ' + b64Utf8(env.FE_API_USER + ':' + env.FE_API_PASS);
+  const res = await fetch(FE_API, {
+    method: 'POST',
+    headers: { Authorization: auth, 'Content-Type': 'application/json' },
+    body: JSON.stringify(message),
+    signal: AbortSignal.timeout(FE_TIMEOUT_MS)
+  });
+  if (!res.ok) {
+    // Body may carry the alias/plan reason; keep it short and never log creds.
+    const detail = await res.text().catch(() => '');
+    throw new Error('Forward Email ' + res.status + ': ' + detail.slice(0, 200));
   }
 }
 
+// Quoted-string display name. Non-ASCII needs no RFC 2047 encoding here --
+// Forward Email builds the MIME and encodes the header itself.
 function displayName(name) {
-  if (/^[\x20-\x7e]*$/.test(name)) {
-    return '"' + name.replace(/([\\"])/g, '\\$1') + '"';
-  }
-  return encodeHeaderWord(name);
-}
-
-// RFC 2047 B-encoding, folded into short encoded-words. ASCII passes through.
-function encodeHeaderWord(value) {
-  if (/^[\x20-\x7e]*$/.test(value)) return value;
-  const encoder = new TextEncoder();
-  const words = [];
-  let chunk = '';
-  let bytes = 0;
-  for (const ch of value) {
-    const len = encoder.encode(ch).length;
-    if (bytes + len > 30) {
-      words.push(chunk);
-      chunk = '';
-      bytes = 0;
-    }
-    chunk += ch;
-    bytes += len;
-  }
-  if (chunk) words.push(chunk);
-  return words.map((w) => '=?UTF-8?B?' + b64Utf8(w) + '?=').join('\r\n ');
+  return '"' + name.replace(/([\\"])/g, '\\$1') + '"';
 }
 
 function b64Utf8(str) {
@@ -259,10 +183,6 @@ function b64Utf8(str) {
     bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
   }
   return btoa(bin);
-}
-
-function wrap76(b64) {
-  return b64.replace(/(.{76})(?=.)/g, '$1\r\n');
 }
 
 function escapeHtml(s) {

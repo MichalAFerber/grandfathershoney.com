@@ -12,13 +12,14 @@ routes = [
 
 [vars]
 SITE_NAME = "Grandfather's Honey"
-SMTP_HOST = "smtp.forwardemail.net"
-SMTP_PORT = "465"
-SMTP_USER = "noreply@grandfathershoney.com"
+# Alias credentials for the Forward Email REST API (api.forwardemail.net/v1/emails).
+# Scoped to this one mailbox -- deliberately NOT the account-wide API token, which
+# would let a leak here send as any of the ~22 domains in the account.
+FE_API_USER = "noreply@grandfathershoney.com"
 MAIL_FROM = "noreply@grandfathershoney.com"
 MAIL_TO = "michal@grandfathershoney.com"
 ALLOWED_ORIGINS = "https://grandfathershoney.com,https://www.grandfathershoney.com"
 
 # Secrets — set from Proton Pass, never committed (DEVSTANDARDS §6/§16):
-#   npx wrangler secret put SMTP_PASS          # Forward Email SMTP password
-#   npx wrangler secret put TURNSTILE_SECRET   # Turnstile secret key
+#   npx wrangler secret put FE_API_PASS        # Proton Pass: Forward Email [grandfathershoney.com]
+#   npx wrangler secret put TURNSTILE_SECRET   # Proton Pass: cloudflare/turnstile-clients
