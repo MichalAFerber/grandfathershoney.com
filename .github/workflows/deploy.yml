@@ -1,12 +1,10 @@
-name: Build and deploy to Cloudflare Pages
+name: Deploy to Cloudflare Pages
 
 on:
   push:
     branches: ["main"]
   workflow_dispatch:
 
-# Only the source checkout is needed now; the GitHub Pages id-token/pages
-# permissions went away with the Pages deployment.
 permissions:
   contents: read
 
@@ -21,18 +19,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.2'
-          bundler-cache: true
-
-      # No --baseurl: the site is served from the domain root on Pages, and
-      # _config.yml already sets `baseurl: ""`.
-      - name: Build with Jekyll
-        run: bundle exec jekyll build
-        env:
-          JEKYLL_ENV: production
+      # Static HTML — no build step. Stage only what should be served, so repo
+      # furniture (LICENSE, README, the worker source) is not published.
+      - name: Stage site
+        run: |
+          mkdir -p _site
+          rsync -a \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude '.gitignore' \
+            --exclude 'LICENSE' \
+            --exclude 'README.md' \
+            --exclude 'worker' \
+            --exclude '_site' \
+            ./ _site/
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3

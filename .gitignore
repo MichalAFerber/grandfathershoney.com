@@ -1,26 +1,4 @@
-# Jekyll
 _site/
-.sass-cache/
+.wrangler/
 .jekyll-cache/
-.jekyll-metadata
-
-# Ruby
-Gemfile.lock
-vendor/
-.bundle/
-
-# OS
 .DS_Store
-Thumbs.db
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# Node (if used)
-node_modules/
-
-# Misc
-*.log
