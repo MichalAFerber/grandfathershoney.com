@@ -38,7 +38,6 @@ This website showcases the legacy of L. L. Langstroth and promotes traditional b
 │   ├── js/
 │   │   └── main.js      # Interactive features
 │   └── images/          # Image assets
-├── worker/              # Cloudflare Worker: contact-form → Forward Email SMTP
 ├── 404.html             # Custom error page
 └── index.html           # Homepage
 ```
@@ -82,11 +81,16 @@ Edit the YAML files in `_data/`:
 
 ### Contact Form
 
-The contact form posts JSON to the Cloudflare Worker in [`worker/`](worker/)
-(`https://api.grandfathershoney.com/contact`), which verifies Turnstile
-server-side and relays the message via Forward Email SMTP. Site-side settings
-live in `_config.yml` under `contact:` (endpoint, fallback email, Turnstile
-sitekey). Deploy and secrets: see [`worker/README.md`](worker/README.md).
+The contact form posts to the shared **mailer**
+(`https://mailer.thompsonblack.us/contact/grandfathershoney`), which verifies
+Turnstile server-side, enforces a per-product Origin allowlist, fixes the
+recipient to the herald registry's `contact_to`, and emits the DEV-STANDARDS §6
+house format under golden tests.
+
+There is no per-site Worker or Function: the endpoint and Turnstile sitekey are
+set directly in `index.html`, and per-product config (from address, recipient,
+allowed origins) lives in the herald registry — change it with `notifyctl`, then
+`notifyctl sync-mailer`.
 
 ### Modifying Styles
 
