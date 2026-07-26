@@ -2,8 +2,10 @@
 
 Receives submissions from the contact form on
 [grandfathershoney.com](https://grandfathershoney.com), verifies Cloudflare
-Turnstile server-side, and relays the message through **Forward Email SMTP**
-(`smtp.forwardemail.net:465`, implicit TLS) per TGWAB Dev Standards §6/§7.
+Turnstile server-side, and relays the message through the **Forward Email REST
+API** (`POST https://api.forwardemail.net/v1/emails`) per TGWAB Dev Standards
+§6/§7. Forward Email builds the MIME, so the worker no longer hand-rolls SMTP
+over `cloudflare:sockets`.
 
 The mail matches the standard contact-form format:
 
@@ -33,8 +35,8 @@ From this directory, logged in to the Cloudflare account that owns the
 
 ```bash
 npx wrangler deploy
-npx wrangler secret put SMTP_PASS        # Forward Email SMTP password — from Proton Pass
-npx wrangler secret put TURNSTILE_SECRET # Turnstile secret key
+npx wrangler secret put FE_API_PASS      # Proton Pass: Forward Email [grandfathershoney.com]
+npx wrangler secret put TURNSTILE_SECRET # Proton Pass: cloudflare/turnstile-clients
 ```
 
 The `api.grandfathershoney.com` custom domain (and its DNS record) is created
@@ -42,9 +44,12 @@ automatically on first deploy.
 
 ## Prerequisites
 
-1. **Forward Email**: outbound SMTP enabled for the domain, credentials for
-   `noreply@grandfathershoney.com`. The domain's SPF/DKIM/DMARC already point
-   at Forward Email.
+1. **Forward Email**: the domain on a paid plan with outbound sending enabled,
+   and the alias credentials for `noreply@grandfathershoney.com`. Those same
+   credentials authenticate the REST API (Basic auth, `alias:password`) — the
+   account-wide API token is deliberately not used, so a leak here cannot send
+   as any other domain in the account. SPF/DKIM/DMARC already point at Forward
+   Email.
 2. **Turnstile**: a widget for `grandfathershoney.com` in the Cloudflare
    dashboard. Put the **sitekey** in `_config.yml` (`contact.turnstile_sitekey`)
    and the **secret key** in the `TURNSTILE_SECRET` worker secret. Until then,
