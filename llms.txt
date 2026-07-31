@@ -1,0 +1,11 @@
+# Grandfather’s Honey
+
+> Small-scale beekeeping and honey production in rural South Carolina honoring Lorenzo Lorraine Langstroth. Static one-page site.
+
+## Pages
+
+- [Home](https://grandfathershoney.com/)
+
+## Source
+
+- [GitHub repository](https://github.com/MichalAFerber/grandfathershoney.com)

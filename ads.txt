@@ -1,0 +1,3 @@
+# grandfathershoney.com does not sell programmatic advertising inventory.
+# There are no authorized digital sellers of inventory on this domain (DS §11).
+# This file exists only to declare that fact and block inventory spoofing.
