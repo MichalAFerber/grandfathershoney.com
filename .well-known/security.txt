@@ -1,0 +1,4 @@
+Contact: https://techguywithabeard.com/
+Expires: 2027-07-01T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://grandfathershoney.com/.well-known/security.txt
