@@ -2,3 +2,5 @@ _site/
 .wrangler/
 .jekyll-cache/
 .DS_Store
+.dev.vars*
+.env*
