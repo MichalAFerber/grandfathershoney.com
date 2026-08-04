@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light only">
+  <meta name="theme-color" content="#d4a03a">
   <title>Page Not Found | Grandfather’s Honey</title>
   <meta name="description" content="Small-scale beekeeping &amp; honey production in rural South Carolina honoring Lorenzo Lorraine Langstroth.">
   <link rel="canonical" href="https://grandfathershoney.com/404.html">
@@ -21,6 +23,7 @@
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:creator" content="@michalaferber">
   <meta name="twitter:title" content="Grandfather’s Honey">
   <meta name="twitter:description" content="Small-scale beekeeping &amp; honey production in rural South Carolina honoring Lorenzo Lorraine Langstroth.">
   <meta name="twitter:image" content="https://grandfathershoney.com/assets/images/share.jpg">
@@ -30,6 +33,10 @@
   <link rel="icon" href="/favicon.ico" sizes="32x32">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
+  <link rel="sitemap" type="application/xml" href="/sitemap-index.xml">
+
+  <!-- Plausible Analytics (self-hosted) -->
+  <script defer data-domain="grandfathershoney.com" src="https://plausible.thompsonblack.us/js/script.js"></script>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -194,12 +201,13 @@
 
   <footer class="site-footer">
   <div class="container">
-    <p>&copy; 2026 Grandfather's Honey. All rights reserved.</p>
+    <p>&copy; <span id="footer-year">2026</span> Grandfather's Honey. All rights reserved.</p>
     <p class="hosted-by">Created with <span aria-label="love">❤️</span> by <a href="https://michalferber.dev/" target="_blank" rel="noopener">Michal Ferber</a>, aka <a href="https://techguywithabeard.com/" target="_blank" rel="noopener">TechGuyWithABeard</a>.</p>
   </div>
 </footer>
 
 
   <script src="/assets/js/main.js"></script>
+  <script>document.getElementById("footer-year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

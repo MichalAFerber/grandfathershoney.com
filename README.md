@@ -1,17 +1,17 @@
 # Grandfather's Honey
 
-A Jekyll-powered website celebrating small-scale beekeeping & honey production in rural South Carolina, honoring Lorenzo Lorraine Langstroth, the father of modern beekeeping.
+A static website celebrating small-scale beekeeping & honey production in rural South Carolina, honoring Lorenzo Lorraine Langstroth, the father of modern beekeeping.
 
 ## 🐝 About
 
 This website showcases the legacy of L. L. Langstroth and promotes traditional beekeeping practices. The site features photo galleries, educational resources, and information about sustainable honey production.
 
-> **Dev-standards note:** client website — keeps its own branding, fonts, copyright, and GitHub Pages hosting; the contact form (Turnstile + Forward Email SMTP) and footer credit follow the TGWAB Dev Standards.
+> **Dev-standards note:** client website — keeps its own branding, fonts, and copyright; the contact form (Turnstile + the house mailer Worker), footer credit, and site plumbing follow the TGWAB Dev Standards.
 
 ## 🛠️ Tech Stack
 
-- **Jekyll** - Static site generator
-- **GitHub Pages** - Hosting
+- **Static HTML** - No build step; the repo is the deployed output
+- **Cloudflare Pages** - Hosting, via the Pages Git integration
 - **Custom CSS** - Responsive design with CSS custom properties
 - **Vanilla JavaScript** - Interactive features including lightbox gallery with arrow navigation
 
@@ -23,61 +23,57 @@ This website showcases the legacy of L. L. Langstroth and promotes traditional b
 - **SEO Optimized** - Meta tags, Open Graph, and sitemap.xml
 - **Custom 404 Page** - Branded error page with helpful navigation
 - **Resource Library** - Curated books, videos, and websites about beekeeping
-- **First-Party Contact Form** - Cloudflare Turnstile protected, relayed via a Cloudflare Worker over Forward Email SMTP (no third-party form service)
+- **First-Party Contact Form** - Cloudflare Turnstile protected, relayed via the house mailer Worker over the Forward Email REST API (no third-party form service)
 
 ## 📁 Project Structure
 
 ```tree
-├── _config.yml          # Jekyll configuration
-├── _data/               # YAML data files (books, videos, websites)
-├── _includes/           # Reusable components (header, footer)
-├── _layouts/            # Page layouts
-├── assets/
-│   ├── css/
-│   │   └── main.css     # Styles with CSS custom properties
-│   ├── js/
-│   │   └── main.js      # Interactive features
-│   └── images/          # Image assets
+├── index.html           # Homepage
 ├── 404.html             # Custom error page
-└── index.html           # Homepage
+├── _headers             # Cloudflare Pages security headers (CSP etc.)
+├── robots.txt           # Search engine crawling rules
+├── sitemap.xml          # XML sitemap
+├── sitemap-index.xml    # Sitemap index (advertised in robots.txt)
+├── llms.txt             # Site summary for AI crawlers
+├── ads.txt              # Programmatic ad inventory declaration
+├── site.webmanifest     # Web app manifest
+├── favicon.ico          # Favicon (16/32/48)
+├── apple-touch-icon.png # Apple touch icon (180x180)
+├── icon-192.png         # PWA icon (192x192)
+├── icon-512.png         # PWA icon (512x512)
+├── icon-512-maskable.png# PWA maskable icon (512x512)
+├── .well-known/
+│   └── security.txt     # Security policy
+└── assets/
+    ├── css/
+    │   └── main.css     # Styles with CSS custom properties
+    ├── js/
+    │   └── main.js      # Interactive features
+    └── images/          # Image assets
 ```
 
 ## 🔧 Local Development
 
-### Prerequisites
-
-- Ruby (>= 2.5)
-- Bundler
-- Jekyll
-
-### Installation
+No build step—serve the repo root with any static server:
 
 ```bash
-# Install dependencies
-bundle install
-
-# Serve locally
-bundle exec jekyll serve
-
-# Build for production
-bundle exec jekyll build
+python3 -m http.server 8000
+# or: npx http-server
 ```
 
-The site will be available at `http://localhost:4000`
+The site will be available at `http://localhost:8000`
+
+## 🚀 Deploy
+
+One repo → one Cloudflare Pages project (TGWAB account), deployed by the **Pages Git integration** on every push to `main`. No build step—the repo is the output; framework preset **None**. There is no other deploy path.
+
+The canonical host is **`grandfathershoney.com`** (apex); `www.grandfathershoney.com` 301s to it.
 
 ## 📝 Content Management
 
 ### Adding Gallery Images
 
-Place images in `assets/images/gallery/` and they'll automatically appear in the gallery section.
-
-### Updating Resources
-
-Edit the YAML files in `_data/`:
-
-- `books.yml` - Beekeeping books
-- `videos.yml` - Educational videos
-- `websites.yml` - Useful websites
+Place images in `assets/images/` and add the corresponding markup in `index.html`'s gallery section.
 
 ### Contact Form
 
@@ -107,9 +103,20 @@ The site uses CSS custom properties (variables) defined in `assets/css/main.css`
 - **Animations**: Smooth transitions and fade-in effects
 - **Lightbox Gallery**: Click any gallery image to view full-size with arrow navigation
 
+## 📋 Standards
+
+Built to the TGWAB Dev Standards **v2.19.0** (internal). Client property, **Fully managed** tier—the product-facing sections (§1 branding, §10 link-backs, §17 launch checklist) do not apply.
+
+### Deviations
+
+- §2—Astro + Tailwind stack—hand-authored static site, migrated off the original Jekyll build—2026-08-04—permanent
+- §2—no runtime CDNs—Playfair Display & Source Sans Pro load from Google Fonts; self-hosting the woff2 files is the open follow-up—2026-08-04—review 2026-11-01
+- §11—generated sitemap—no build step on this site, so `sitemap.xml` is maintained by hand—2026-08-04—permanent
+- §14—dark mode legibility—site is light-only by client design (`color-scheme: light only`)—2026-08-04—permanent
+
 ## 📄 License
 
-© 2026 Grandfather's Honey. All rights reserved.
+© Grandfather's Honey. All rights reserved.
 
 ## 🔗 Links
 

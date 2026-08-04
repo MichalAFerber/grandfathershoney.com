@@ -1,0 +1,45 @@
+# Cloudflare Pages security headers—DEV-STANDARDS §12
+# Served from the repo root (this site has no build step, the repo IS the output).
+#
+# Platform facts this file depends on—do not "clean these up":
+#   • Limits: 100 header rules; 2,000 characters per LINE. Never wrap the
+#     CSP—a wrapped line is silently dropped, taking the whole policy with it.
+#   • Pages injects `Access-Control-Allow-Origin: *` on static assets. We unset it.
+#   • ONE Content-Security-Policy block, for /*. Pages joins duplicate headers
+#     with a comma and comma-joined CSPs are enforced as their INTERSECTION—a
+#     per-page "loosened" policy tightens the site instead of relaxing it.
+#   • No Strict-Transport-Security here on purpose. HSTS is owned at the zone:
+#     SSL/TLS → Edge Certificates → HTTP Strict Transport Security.
+#
+# Site-specific CSP additions, on the same line per §12:
+#   • style-src + font-src: Google Fonts (Playfair Display & Source Sans Pro)—
+#     inherited client design, recorded as a §2 deviation in the README.
+#   • connect-src + form-action https://mailer.thompsonblack.us: the §6 contact
+#     form—fetch() is governed by connect-src (§7); form-action covers the
+#     native no-JS fallback the form's action attribute declares.
+#   • frame-src https://www.youtube.com: the Resources video embeds.
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  Permissions-Policy: accelerometer=(), autoplay=(), browsing-topics=(), camera=(), display-capture=(), encrypted-media=(), geolocation=(), gyroscope=(), idle-detection=(), local-fonts=(), magnetometer=(), microphone=(), midi=(), payment=(), publickey-credentials-get=(), screen-wake-lock=(), serial=(), usb=(), xr-spatial-tracking=()
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'unsafe-inline' https://plausible.thompsonblack.us https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://plausible.thompsonblack.us https://mailer.thompsonblack.us; manifest-src 'self'; frame-src https://challenges.cloudflare.com https://www.youtube.com; base-uri 'none'; form-action 'self' https://mailer.thompsonblack.us; frame-ancestors 'none'
+  ! Access-Control-Allow-Origin
+
+# --- Indexing: pages.dev is never a canonical host (§11) ---------------------
+# Cloudflare adds X-Robots-Tag: noindex to PREVIEW deployments only. The
+# production <project>.pages.dev is NOT covered and IS indexable—verified.
+# A :placeholder matches exactly one host label.
+
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex, nofollow
+
+https://:version.:project.pages.dev/*
+  X-Robots-Tag: noindex, nofollow
+
+# RFC 9116 §2.3—security.txt MUST be text/plain with charset=utf-8.
+/.well-known/security.txt
+  Content-Type: text/plain; charset=utf-8
