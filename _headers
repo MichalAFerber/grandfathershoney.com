@@ -17,7 +17,10 @@
 #   • connect-src + form-action https://mailer.thompsonblack.us: the §6 contact
 #     form—fetch() is governed by connect-src (§7); form-action covers the
 #     native no-JS fallback the form's action attribute declares.
-#   • frame-src https://www.youtube.com: the Resources video embeds.
+#   • frame-src https://www.youtube.com: the Resources video embeds. The
+#     iframes themselves carry referrerpolicy="strict-origin-when-cross-origin"
+#     because YouTube's player rejects no-referrer embeds with error 153; the
+#     site-wide Referrer-Policy below stays no-referrer (§12 deviation, README).
 
 /*
   X-Content-Type-Options: nosniff
