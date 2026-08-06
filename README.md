@@ -113,6 +113,7 @@ Built to the TGWAB Dev Standards **v2.19.0** (internal). Client property, **Full
 - §2—no runtime CDNs—Playfair Display & Source Sans Pro load from Google Fonts; self-hosting the woff2 files is the open follow-up—2026-08-04—review 2026-11-01
 - §11—generated sitemap—no build step on this site, so `sitemap.xml` is maintained by hand—2026-08-04—permanent
 - §14—dark mode legibility—site is light-only by client design (`color-scheme: light only`)—2026-08-04—permanent
+- §12—YouTube iframes carry `referrerpolicy="strict-origin-when-cross-origin"`—YouTube's player rejects embeds that send no Referer (error 153), so the three Resources embeds override the site-wide `no-referrer` header per element—2026-08-06—permanent
 
 ## 📄 License
 
