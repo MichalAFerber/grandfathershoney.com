@@ -1,0 +1,65 @@
+name: Deploy to Cloudflare Pages
+
+# Direct-upload deploy model, matching wizard-web's: this workflow is the single
+# deploy path for this site, and Cloudflare's Git integration is turned off for
+# the project (§4 — exactly one deploy path).
+#
+#   push to main   → production deployment
+#   pull_request   → preview deployment (branch alias)
+#
+# This site is static: there is nothing to build, so the repo root is uploaded
+# as-is, which is exactly what the Pages project's own build config did.
+#
+# Without a CLOUDFLARE_API_TOKEN secret the deploy step skips green rather than
+# failing. That is deliberate: it means this file can land before the secret
+# exists, and can never race a still-enabled Git integration.
+#
+# Secrets:
+#   CLOUDFLARE_API_TOKEN   Cloudflare Pages:Edit on the TechGuyWithABeard account
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Check for the deploy credential
+        id: gate
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "No CLOUDFLARE_API_TOKEN — skipping deploy (see the header)."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # A dirty tree cannot be deployed from here — the runner only ever has
+      # committed content. That is half the point of moving off hand-run
+      # `wrangler pages deploy`: this project shipped 6 of its last 17
+      # deployments from an uncommitted working copy, and none of those builds
+      # matched a commit anyone could diff or roll back to.
+      - name: Deploy to Cloudflare Pages
+        if: steps.gate.outputs.ok == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || '8a0d49b1f3fdcdadec135562ec8a4fdc' }}
+        run: >
+          npx wrangler@4 pages deploy .
+          --project-name grandfathershoney-com
+          --branch ${{ github.ref == 'refs/heads/main' && 'main' || github.head_ref }}
+          --commit-dirty=false
