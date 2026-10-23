@@ -58,8 +58,10 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || '8a0d49b1f3fdcdadec135562ec8a4fdc' }}
+          COMMIT_HASH: ${{ github.sha }}
         run: >
           npx wrangler@4 pages deploy .
           --project-name grandfathershoney-com
           --branch ${{ github.ref == 'refs/heads/main' && 'main' || github.head_ref }}
+          --commit-hash "$COMMIT_HASH"
           --commit-dirty=false
